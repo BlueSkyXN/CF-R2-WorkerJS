@@ -19,9 +19,9 @@ async function handleRequest(request) {
             method: request.method, // 保持原始请求的HTTP方法
             headers: request.headers // 保持原始请求的头部
         });
-    } else if (url.pathname.startsWith('/worker_proxy_cdnjson-baidu/')) {
+    } else if (url.pathname.startsWith('/worker_to_cdnjson-baidu/')) {
         // 重定向到经过cdnjson和百度图片处理的请求处理
-        const targetPath = url.pathname.replace('/worker_proxy_cdnjson-baidu', '');
+        const targetPath = url.pathname.replace('/worker_to_cdnjson-baidu', '');
         const redirectUrl = `https://image.baidu.com/search/down?url=https://cdn.cdnjson.com/pic.html?url=${BUCKET_BASE_URL}${targetPath}`;
         // 执行302重定向到构造的URL
         return Response.redirect(redirectUrl, 302);
@@ -37,22 +37,25 @@ async function handleRequest(request) {
         const redirectUrl = `https://images.weserv.nl/?url=https://image.baidu.com/search/down?url=https://cdn.cdnjson.com/pic.html?url=${BUCKET_BASE_URL}${targetPath}`;
         // 执行302重定向到通过Weserv封装的URL
         return Response.redirect(redirectUrl, 302);
-    } else if (url.pathname.startsWith('/worker_proxy_transfer_weservnl-jpg/')) {
-        // 通过Weserv将图片转换为JPEG格式的请求处理
-        const targetPath = url.pathname.replace('/worker_proxy_transfer_weservnl-jpg/', '');
-        const weservUrl = `https://images.weserv.nl/?output=jpg&url=${BUCKET_BASE_URL}${targetPath}`;
-        
-        // 准备自定义头部，覆盖Referer和User-Agent
-        const customHeaders = new Headers(request.headers);
-        customHeaders.set('Referer', ''); // 设置空Referer
-        customHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'); // 设置指定的User-Agent
+    } else if (url.pathname.startsWith('/worker_from_cdnjson/')) {
+        // 提取目标图像路径并替换文件扩展名
+        let imagePath = url.pathname.replace('/worker_from_cdnjson/', '');
+        imagePath = imagePath.replace('.jpg', '.avif'); // 将.jpg替换为.avif
     
-        // 反向代理到Weserv的URL，并使用自定义头部
-        return fetch(weservUrl, {
-            method: request.method, // 保持原始请求的HTTP方法
-            headers: customHeaders // 使用自定义头部
+        // 构造原始图像URL
+        const originImageUrl = `${BUCKET_BASE_URL}/${imagePath}`;
+    
+        // 向原始图像URL发出请求
+        const response = await fetch(originImageUrl);
+    
+        // 返回响应
+        return new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: response.headers
         });
-    } else {
+    }    
+    else {
         // 如果没有匹配的路径，调用回退逻辑
         return handleFallback();
     }
