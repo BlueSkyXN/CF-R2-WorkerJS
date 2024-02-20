@@ -41,10 +41,16 @@ async function handleRequest(request) {
         // 通过Weserv将图片转换为JPEG格式的请求处理
         const targetPath = url.pathname.replace('/worker_proxy_transfer_weservnl-jpg/', '');
         const weservUrl = `https://images.weserv.nl/?output=jpg&url=${BUCKET_BASE_URL}${targetPath}`;
-        // 反向代理到Weserv的URL并返回响应
+        
+        // 准备自定义头部，覆盖Referer和User-Agent
+        const customHeaders = new Headers(request.headers);
+        customHeaders.set('Referer', ''); // 设置空Referer
+        customHeaders.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'); // 设置指定的User-Agent
+    
+        // 反向代理到Weserv的URL，并使用自定义头部
         return fetch(weservUrl, {
             method: request.method, // 保持原始请求的HTTP方法
-            headers: request.headers // 保持原始请求的头部
+            headers: customHeaders // 使用自定义头部
         });
     } else {
         // 如果没有匹配的路径，调用回退逻辑
