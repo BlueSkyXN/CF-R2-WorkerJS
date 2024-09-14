@@ -40,7 +40,7 @@ async function handleRequest(request) {
     } else if (url.pathname.startsWith('/worker_from_cdnjson/')) {
         // 提取目标图像路径并替换文件扩展名
         let imagePath = url.pathname.replace('/worker_from_cdnjson/', '');
-        imagePath = imagePath.replace('.jpg', '.avif'); // 将.jpg替换为.avif
+        imagePath = imagePath.replace('.avif', '.avif'); // 将.jpg替换为.avif，左边是最终的，我先都用avif
     
         // 构造原始图像URL
         const originImageUrl = `${BUCKET_BASE_URL}/${imagePath}`;
